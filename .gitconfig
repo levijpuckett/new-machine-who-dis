@@ -1,0 +1,58 @@
+[user]
+	name =
+	email =
+[credential]
+    helper = cache
+[color]
+	branch = auto
+	diff = auto
+	status = auto
+	ui = true
+[diff]
+#    tool = meld
+    submodule = log
+[merge]
+	# only fast-forward merges. Goodbye, merge bubbles!
+	ff = only
+#	tool = meld
+[interactive]
+	# navigate the --patch option with single key presses
+	singleKey = yes
+[alias]
+	# git dog - pretty graph of the repo
+	dog = log --all --decorate --oneline --graph
+    # add hunk-by-hunk
+    adp = add --patch
+	# list local branches
+	bl = branch --list
+	# list local and remote branches
+	ba = branch -a
+	# use checkout for individual paths/detached HEAD...
+	co = checkout
+	# ... and switch for branches/tags
+	sw = switch
+	# list the files that have changed
+	fdiff = diff --stat
+	#git ignored - see a list of all files being ignored
+	ignored = ls-files --others -i --exclude-standard
+	#git standup - Quick view of what you did yesterday.
+	standup = !git log --since yesterday --author `git config user.email` --pretty=short
+	# show the last commit
+	last = log -1 HEAD #--pretty=oneline
+	# launch the GUI tool. Blasphemy!
+	visual = !gitk
+[push]
+	default = current
+	recurseSubmodules = check
+[core]
+	# :q!
+	editor = vim
+	autocrlf = input
+[branch]
+	autosetuprebase = always
+[pull]
+	rebase = true
+[fetch]
+	prune = true
+[init]
+    defaultBranch = main

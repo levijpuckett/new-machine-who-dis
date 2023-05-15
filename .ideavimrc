@@ -1,0 +1,55 @@
+" easier escaping
+inoremap jk <ESC>
+inoremap kj <ESC>
+
+" easier to reach this for leading
+let mapleader = ","
+
+" better autocomplete
+set ignorecase
+set smartcase
+
+" show what we search for
+set hlsearch
+
+set noexpandtab
+set tabstop=4
+
+" show the absolute number on the current line...
+set number
+" ... and the relative jump to everywhere else
+"set relativenumber
+
+" ,w - open a new vertical split and switch to it
+nnoremap <leader>w <C-w>v<C-w>l
+
+" window navigation. ctl + [h,j,k,l] to move around windows
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" sane wrapping settings
+set wrap
+set textwidth=99
+set formatoptions=ctqrn1
+set colorcolumn=100
+highlight colorcolumn ctermbg=235
+
+" ... different when committing
+filetype indent plugin on
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" CLION stuff
+map <leader>r <Action>(Run)
+map <leader>b <Action>(Build)
+map <leader>B <Action>(Rebuild)
+map <leader>e <Action>(ShowErrorDescription)
+map <leader>q <Action>(GoToImplementation)
+inoremap <leader>h noh
+map <leader>R <Action>(RenameElement)
+map <leader>a <Action>(Back)
+map <leader>f <Action>(Forward)
+map <leader>s <Action>(Switcher)
+
