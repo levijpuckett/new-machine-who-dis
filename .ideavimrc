@@ -53,3 +53,4 @@ map <leader>a <Action>(Back)
 map <leader>f <Action>(Forward)
 map <leader>s <Action>(Switcher)
 
+map <leader>t <Action>(ActivateTerminalToolWindow)
