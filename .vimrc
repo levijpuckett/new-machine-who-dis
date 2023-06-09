@@ -18,7 +18,8 @@ set hlsearch
 " tabs
 set tabstop=4
 set shiftwidth=4
-set noexpandtab
+set softtabstop=4
+set expandtab
 
 " show the absolute number on the current line
 set number
