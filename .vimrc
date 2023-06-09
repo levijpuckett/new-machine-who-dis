@@ -42,3 +42,8 @@ highlight colorcolumn ctermbg=235
 " ... different when committing
 filetype indent plugin on
 
+" Fold based on syntax
+set foldmethod=syntax
+" disable folding so the folds are open when we open a file. zc will then enable folding.
+set foldlevelstart=99
+
