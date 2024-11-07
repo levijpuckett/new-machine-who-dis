@@ -12,8 +12,11 @@ let mapleader = ","
 set ignorecase
 set smartcase
 
-" show what we search for
+" show what we search for...
 set hlsearch
+
+" ... and clear it easily
+nnoremap <leader>h :noh<CR>
 
 " tabs
 set tabstop=4

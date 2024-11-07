@@ -6,12 +6,13 @@ source ~/.vimrc
 map <leader>r <Action>(Run)
 map <leader>b <Action>(Build)
 map <leader>B <Action>(Rebuild)
+
 map <leader>e <Action>(ShowErrorDescription)
-map <leader>q <Action>(GoToImplementation)
-inoremap <leader>h noh
+map <leader>s <Action>(GotoDeclaration)
 map <leader>R <Action>(RenameElement)
 map <leader>a <Action>(Back)
 map <leader>f <Action>(Forward)
-map <leader>s <Action>(Switcher)
+map <leader>n <Action>(NextOccurence)
+map <leader>g <Action>(FindUsages)
 
 map <leader>t <Action>(ActivateTerminalToolWindow)

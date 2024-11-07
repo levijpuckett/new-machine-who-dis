@@ -1,6 +1,6 @@
 [user]
-	name =
-	email =
+    name = 
+    email = 
 [credential]
     helper = cache
 [color]
@@ -9,7 +9,7 @@
     status = auto
     ui = true
 [diff]
-#    tool = meld
+    tool = meld
     submodule = log
 [merge]
     # only fast-forward merges. Goodbye, merge bubbles!
