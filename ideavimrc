@@ -3,16 +3,23 @@ source ~/.vimrc
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " CLION stuff
+" Building and running
 map <leader>r <Action>(Run)
+map <leader>d <Action>(Debug)
 map <leader>b <Action>(Build)
 map <leader>B <Action>(Rebuild)
 
+" Navigation
 map <leader>e <Action>(ShowErrorDescription)
 map <leader>s <Action>(GotoDeclaration)
+map <leader>x <Action>(QuickImplementations)
 map <leader>R <Action>(RenameElement)
 map <leader>a <Action>(Back)
 map <leader>f <Action>(Forward)
 map <leader>n <Action>(NextOccurence)
 map <leader>g <Action>(FindUsages)
+nmap [[ <Action>(MethodUp)
+nmap ]] <Action>(MethodDown)
 
+" Pull up a terminal
 map <leader>t <Action>(ActivateTerminalToolWindow)
