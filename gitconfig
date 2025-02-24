@@ -21,7 +21,10 @@
     singleKey = yes
 [alias]
     # git dog - pretty graph of the repo
-    dog = log --all --decorate --oneline --graph
+    # This used to be from the mnemonic "git log a dog", but I've
+    # dropped the "--all" for a more specific subset of things to
+    # graph. To get the stash back, add "--all"
+    dog = log --branches --tags --remotes --decorate --oneline --graph
     # add hunk-by-hunk
     adp = add --patch
     # list local branches
