@@ -18,6 +18,7 @@ map <leader>a <Action>(Back)
 map <leader>f <Action>(Forward)
 map <leader>n <Action>(NextOccurence)
 map <leader>g <Action>(FindUsages)
+map <leader>m <Action>(ActivateSerialMonitorToolWindow)
 nmap [[ <Action>(MethodUp)
 nmap ]] <Action>(MethodDown)
 
