@@ -62,3 +62,11 @@
     prune = true
 [init]
     defaultBranch = main
+[rerere]
+    # https://git-scm.com/docs/git-rerere rerere - REsolve REused REsolution
+    # Caches your merge # conflict resolutions so that if the same one pops up later, git will
+    # fix it in the same # way that you already did - no need to redo the same conflicts over
+    # and over on an # awkward merge.  Downside: if you resolve incorrectly, this will
+    # remember the wrong # resolution. You'll have to clear the resolution memory to stop
+    # that.
+    enabled = true
