@@ -1,1 +1,1 @@
-Simple set of defaults for a development machine.
+Simple set of default dotfiles for a development machine.
