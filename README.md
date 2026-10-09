@@ -17,7 +17,7 @@ first launch.
 
 # Install
 
-install.sh will move all the dotfiles to the home directory via symlinks, so that any
-tinkering can be pushed back to this repo easily. It will also fetch and install the programs
-that use these dotfiles (nvim, tmux, etc).
+install.sh will put all the dotfiles in the home directory as symlinks, so that any tinkering
+can be pushed back to this repo easily. It will also fetch and install the programs that use
+these dotfiles (nvim, tmux, etc).
 
