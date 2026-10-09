@@ -19,13 +19,16 @@ link() {
   echo "  $dest -> $src"
 }
 
+echo "==> apt packages"
+sudo apt-get update
+sudo apt-get install -y ripgrep fd-find tmux
+
 echo "==> Linking dotfiles"
 link gitconfig    ~/.gitconfig
 link vimrc        ~/.vimrc
 link ideavimrc    ~/.ideavimrc
 link bash_aliases ~/.bash_aliases
 link tmux.conf    ~/.tmux.conf
-link nvim         ~/.config/nvim
 
 # Untracked, per-machine git settings (name, email...), included by gitconfig
 if [ ! -e ~/.gitconfig.local ]; then
@@ -35,6 +38,8 @@ fi
 
 if [ "${1:-}" != "--no-nvim" ]; then
   "$DOTFILES/install-nvim.sh"
+  echo "==> nvim dotfiles"
+  link nvim ~/.config/nvim
 fi
 
 echo
