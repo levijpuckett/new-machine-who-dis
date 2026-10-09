@@ -1,6 +1,5 @@
-[user]
-    name = 
-    email = 
+[include]
+    path = ~/.gitconfig.local
 [credential]
     helper = cache
 [color]

@@ -25,7 +25,8 @@ set softtabstop=4
 set expandtab
 
 " show the absolute number on the current line
-set number
+set number relativenumber
+set scrolloff=8
 
 " ,w - open a new vertical split and switch to it
 nnoremap <leader>w <C-w>v<C-w>l
