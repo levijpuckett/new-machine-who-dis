@@ -9,6 +9,12 @@ My preferred default config for a fresh dev machine.
  - bash\_aliases
 
 
+# Coding agents
+
+ - AGENTS.md: global instructions, linked to ~/AGENTS.md and ~/.claude/CLAUDE.md
+ - skills: personal skills, each linked into ~/.claude/skills
+
+
 # Neo Vim
 
 The nvim config involves installing a number of extensions for nvim, which it will do on the

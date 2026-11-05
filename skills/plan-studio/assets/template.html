@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'">
+<title>Plan Studio</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --accent: #2563eb; --accent-soft: #dbeafe; --accent-tint: #eff6ff; --ok: #16a34a;
+    --border: #e5e7eb; --muted: #6b7280; --bg: #f9fafb; --mark: #fef3c7;
+    --surface: #ffffff; --fg: #111827; --on-accent: #ffffff;
+    --comment-bg: #fffbeb; --approve-hover-bg: #f0fdf4;
+    --code-bg: #f3f4f6; --pre-bg: #f6f8fa;
+    --disabled-bg: #cbd5e1; --disabled-fg: #9ca3af; --danger: #dc2626;
+    --shadow-color: rgba(0,0,0,0.15); --shadow-color-strong: rgba(0,0,0,0.2);
+  }
+  :root[data-theme="dark"] {
+    --accent: #3b82f6; --accent-soft: #1e3a5f; --accent-tint: #172554; --ok: #22c55e;
+    --border: #374151; --muted: #9ca3af; --bg: #0f172a; --mark: #78350f;
+    --surface: #1e293b; --fg: #e5e7eb; --on-accent: #ffffff;
+    --comment-bg: #422006; --approve-hover-bg: #052e1c;
+    --code-bg: #111827; --pre-bg: #0b1220;
+    --disabled-bg: #334155; --disabled-fg: #64748b; --danger: #f87171;
+    --shadow-color: rgba(0,0,0,0.5); --shadow-color-strong: rgba(0,0,0,0.6);
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         background: var(--bg); color: var(--fg); line-height: 1.6; }
+  header { position: sticky; top: 0; z-index: 20; background: var(--surface);
+           border-bottom: 1px solid var(--border); padding: 0.7rem 1.5rem;
+           display: flex; align-items: center; gap: 1rem; }
+  header h1 { font-size: 1.05rem; font-weight: 600; flex: 1;
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .round-badge { background: var(--accent-soft); color: var(--accent);
+                 border-radius: 999px; padding: 0.15rem 0.7rem; font-size: 0.8rem;
+                 font-weight: 600; white-space: nowrap; }
+  .hint { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+  main { display: flex; gap: 1.5rem; max-width: 78rem; margin: 0 auto; padding: 1.5rem; }
+  #plan-wrap { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border);
+               border-radius: 10px; padding: 2rem 2.5rem; }
+  aside { width: 21rem; flex-shrink: 0; }
+  #sidebar { position: sticky; top: 4.2rem; display: flex; flex-direction: column;
+             gap: 0.8rem; max-height: calc(100vh - 5.5rem); }
+  #comment-list { overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem; }
+  .cmt-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+              padding: 0.6rem 0.7rem; font-size: 0.85rem; }
+  .cmt-card .meta { display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.25rem; }
+  .cmt-num { background: var(--accent); color: var(--on-accent); border-radius: 999px;
+             font-size: 0.7rem; font-weight: 700; padding: 0 0.45rem; }
+  .cmt-heading { color: var(--muted); font-size: 0.7rem; flex: 1;
+                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cmt-del { border: none; background: none; color: var(--muted); cursor: pointer;
+             font-size: 0.9rem; }
+  .cmt-del:hover { color: var(--danger); }
+  .cmt-quote { border-left: 3px solid var(--accent-soft); padding-left: 0.5rem;
+               color: var(--muted); font-style: italic; margin-bottom: 0.35rem;
+               font-size: 0.78rem; overflow: hidden; display: -webkit-box;
+               -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .cmt-card textarea, #general-box textarea, #popover textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); color: var(--fg);
+    padding: 0.4rem 0.5rem; font: inherit; font-size: 0.85rem; resize: vertical; }
+  .cmt-card textarea:focus, #general-box textarea:focus, #popover textarea:focus {
+    outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  #general-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+                 padding: 0.7rem; }
+  #general-box label { font-size: 0.8rem; font-weight: 600; display: block;
+                       margin-bottom: 0.35rem; }
+  #footer-btns { display: flex; gap: 0.6rem; }
+  #footer-btns button { flex: 1; padding: 0.55rem 0.5rem; border-radius: 8px;
+                        font: inherit; font-size: 0.88rem; font-weight: 600;
+                        cursor: pointer; border: 1px solid transparent; }
+  #btn-send { background: var(--accent); color: var(--on-accent); }
+  #btn-send:disabled { background: var(--disabled-bg); cursor: not-allowed; }
+  #btn-approve { background: var(--surface); color: var(--ok); border-color: var(--ok) !important; }
+  #btn-approve:hover:not(:disabled) { background: var(--approve-hover-bg); }
+  #btn-approve:disabled { color: var(--disabled-fg); border-color: var(--border) !important;
+                          cursor: not-allowed; }
+  /* plan blocks */
+  #plan h1 { font-size: 1.6rem; margin: 1.2rem 0 0.6rem; }
+  #plan h2 { font-size: 1.3rem; margin: 1.4rem 0 0.5rem; padding-bottom: 0.2rem;
+             border-bottom: 1px solid var(--border); }
+  #plan h3 { font-size: 1.1rem; margin: 1.1rem 0 0.4rem; }
+  #plan h4, #plan h5, #plan h6 { font-size: 1rem; margin: 0.9rem 0 0.3rem; }
+  #plan p, #plan ul, #plan ol, #plan pre, #plan blockquote, #plan table { margin: 0.6rem 0; }
+  #plan ul, #plan ol { padding-left: 1.6rem; }
+  #plan li { margin: 0.2rem 0; }
+  #plan code { background: var(--code-bg); border-radius: 4px; padding: 0.1em 0.35em;
+               font-size: 0.87em; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+  #plan pre { background: var(--pre-bg); border: 1px solid var(--border); border-radius: 8px;
+              padding: 0.8rem 1rem; overflow-x: auto; }
+  #plan pre code { background: none; padding: 0; }
+  #plan blockquote { border-left: 4px solid var(--border); padding-left: 1rem;
+                     color: var(--muted); }
+  #plan table { border-collapse: collapse; display: block; overflow-x: auto; }
+  #plan th, #plan td { border: 1px solid var(--border); padding: 0.35rem 0.7rem;
+                       font-size: 0.9rem; }
+  #plan th { background: var(--bg); }
+  #plan a { color: var(--accent); }
+  mark.sel-hl { background: var(--mark); border-radius: 3px; }
+  /* commentable blocks */
+  .cblock { position: relative; border-radius: 6px; cursor: pointer;
+            transition: background 0.1s; }
+  .cblock:hover { background: var(--accent-tint); outline: 2px solid var(--accent-soft); }
+  .cblock.has-comment { background: var(--comment-bg); }
+  .cbadge { position: absolute; top: -0.5rem; right: -0.5rem; background: var(--accent);
+            color: var(--on-accent); border-radius: 999px; font-size: 0.68rem; font-weight: 700;
+            padding: 0.05rem 0.42rem; user-select: none; z-index: 5; }
+  /* popover + selection button */
+  #popover { position: absolute; z-index: 30; background: var(--surface); border: 1px solid var(--border);
+             border-radius: 10px; box-shadow: 0 8px 24px var(--shadow-color);
+             padding: 0.7rem; width: 20rem; display: none; }
+  #popover .quote-preview { font-size: 0.75rem; color: var(--muted); font-style: italic;
+             margin-bottom: 0.4rem; overflow: hidden; display: -webkit-box;
+             -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  #popover .btns { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; }
+  #popover button { padding: 0.3rem 0.8rem; border-radius: 6px; font: inherit;
+                    font-size: 0.82rem; cursor: pointer; border: 1px solid var(--border);
+                    background: var(--surface); color: var(--fg); }
+  #popover button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  #sel-btn { position: absolute; z-index: 30; display: none; background: var(--accent);
+             color: var(--on-accent); border: none; border-radius: 999px; padding: 0.25rem 0.8rem;
+             font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+             box-shadow: 0 4px 12px var(--shadow-color-strong); }
+  /* overlay screens */
+  #overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100;
+             display: none; flex-direction: column; align-items: center;
+             justify-content: center; gap: 1rem; text-align: center; padding: 2rem; }
+  #overlay h2 { font-size: 1.3rem; }
+  #overlay p { color: var(--muted); }
+  .spinner { width: 2.2rem; height: 2.2rem; border: 4px solid var(--accent-soft);
+             border-top-color: var(--accent); border-radius: 50%;
+             animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #empty-note { color: var(--muted); font-size: 0.82rem; text-align: center;
+                padding: 0.5rem; }
+  /* what-changed banner */
+  #summary-banner { background: var(--accent-tint); border: 1px solid var(--accent-soft);
+                    border-left: 4px solid var(--accent); border-radius: 8px;
+                    padding: 0.8rem 1.1rem; margin-bottom: 1.4rem; font-size: 0.9rem; }
+  #summary-banner .sb-head { display: flex; align-items: center; gap: 0.5rem;
+                    cursor: pointer; user-select: none; font-weight: 600;
+                    color: var(--accent); }
+  #summary-banner .sb-head .chev { transition: transform 0.15s; font-size: 0.75rem; }
+  #summary-banner.collapsed .sb-head .chev { transform: rotate(-90deg); }
+  #summary-banner.collapsed .sb-body { display: none; }
+  #summary-banner .sb-body { margin-top: 0.5rem; }
+  #summary-banner .sb-body ul, #summary-banner .sb-body ol { padding-left: 1.4rem;
+                    margin: 0.3rem 0; }
+  #summary-banner .sb-body p { margin: 0.3rem 0; }
+  #summary-banner .sb-body code { background: var(--accent-soft); border-radius: 4px;
+                    padding: 0.1em 0.3em; font-size: 0.85em;
+                    font-family: ui-monospace, Consolas, monospace; }
+  /* questions mode */
+  #questions-wrap { display: none; flex: 1; min-width: 0; max-width: 46rem; margin: 0 auto; }
+  body.mode-questions #plan-wrap, body.mode-questions aside,
+  body.mode-questions #popover, body.mode-questions #sel-btn,
+  body.mode-questions .round-badge { display: none !important; }
+  body.mode-questions #questions-wrap { display: block; }
+  .qcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+           padding: 1rem 1.2rem; margin-bottom: 1rem; }
+  .qcard h3 { font-size: 1.05rem; margin-bottom: 0.15rem; }
+  .qcard .qmulti-hint { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.6rem; }
+  .qopt { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.4rem 0;
+          border-bottom: 1px solid var(--border); cursor: pointer; }
+  .qopt:last-of-type { border-bottom: none; }
+  .qopt input { margin-top: 0.25rem; }
+  .qopt .qopt-label { font-weight: 600; font-size: 0.92rem; }
+  .qopt .qopt-desc { color: var(--muted); font-size: 0.82rem; margin-top: 0.1rem; }
+  .qother { margin-top: 0.5rem; }
+  .qother input[type=text] { width: 100%; border: 1px solid var(--border); border-radius: 6px;
+                              background: var(--surface); color: var(--fg);
+                              padding: 0.4rem 0.5rem; font: inherit; font-size: 0.85rem; }
+  #questions-footer { display: flex; justify-content: flex-end; margin-top: 0.5rem; }
+  #btn-submit-answers { background: var(--accent); color: var(--on-accent); border: none; border-radius: 8px;
+                         padding: 0.6rem 1.4rem; font: inherit; font-size: 0.92rem;
+                         font-weight: 600; cursor: pointer; }
+  #btn-submit-answers:disabled { background: var(--disabled-bg); cursor: not-allowed; }
+  #theme-toggle { border: none; background: none; cursor: pointer; font-size: 1.05rem;
+                  line-height: 1; padding: 0.3rem 0.5rem; border-radius: 6px; color: var(--fg); }
+  #theme-toggle:hover { background: var(--accent-tint); }
+</style>
+<script>
+(function () {
+  var KEY = "plan-studio-theme";
+  var stored = null;
+  try { stored = localStorage.getItem(KEY); } catch (e) {}
+  var theme = stored ||
+    ((window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light");
+  document.documentElement.dataset.theme = theme;
+})();
+</script>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <span class="round-badge">Round __ROUND__</span>
+  <span class="hint" id="hint">click a block or select text to comment</span>
+  <button id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">🌙</button>
+</header>
+<main>
+  <div id="plan-wrap"><div id="summary-slot"></div><article id="plan"></article></div>
+  <aside><div id="sidebar">
+    <div id="comment-list"><div id="empty-note">No comments yet. Click any paragraph,
+      list item, or code block in the plan, or select a span of text.</div></div>
+    <div id="general-box">
+      <label for="general">General comments</label>
+      <textarea id="general" rows="3" placeholder="Overall feedback not tied to a specific section…"></textarea>
+    </div>
+    <div id="footer-btns">
+      <button id="btn-send" disabled>Send comments</button>
+      <button id="btn-approve">Approve plan</button>
+    </div>
+  </div></aside>
+  <div id="questions-wrap">
+    <div id="questions-list"></div>
+    <div id="questions-footer">
+      <button id="btn-submit-answers" disabled>Submit answers</button>
+    </div>
+  </div>
+</main>
+<div id="popover">
+  <div class="quote-preview"></div>
+  <textarea rows="3" placeholder="Your comment…"></textarea>
+  <div class="btns"><button id="pop-cancel">Cancel</button>
+    <button id="pop-save" class="primary">Save</button></div>
+</div>
+<button id="sel-btn">&#128172; Comment</button>
+<div id="overlay">
+  <div class="spinner" id="overlay-spinner"></div>
+  <h2 id="overlay-title"></h2>
+  <p id="overlay-msg"></p>
+</div>
+
+<script>__MARKED_JS__</script>
+<script>
+"use strict";
+const MODE = "__MODE__";
+const QUESTIONS = __QUESTIONS_JSON__;
+const PLAN_MD = __PLAN_JSON__;
+const SUMMARY_MD = __SUMMARY_JSON__;
+const BOOT_ID = "__BOOT_ID__";
+const PLAN_TITLE = __PLAN_TITLE__;
+
+/* ---------- minimal markdown fallback (used only if marked.min.js absent) ---------- */
+function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function inlineMd(s) {
+  return esc(s)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|\W)\*([^*\s][^*]*)\*/g, "$1<em>$2</em>")
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>');
+}
+function miniMarkdown(md) {
+  const lines = md.split("\n"); const out = []; let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/^```/.test(line)) {
+      const buf = []; i++;
+      while (i < lines.length && !/^```/.test(lines[i])) buf.push(lines[i++]);
+      i++; out.push("<pre><code>" + esc(buf.join("\n")) + "</code></pre>"); continue;
+    }
+    const h = line.match(/^(#{1,6})\s+(.*)/);
+    if (h) { out.push(`<h${h[1].length}>${inlineMd(h[2])}</h${h[1].length}>`); i++; continue; }
+    if (/^\s*([-*+]|\d+\.)\s+/.test(line)) {
+      const ordered = /^\s*\d+\./.test(line); const items = [];
+      while (i < lines.length && /^\s*([-*+]|\d+\.)\s+/.test(lines[i]))
+        items.push("<li>" + inlineMd(lines[i++].replace(/^\s*([-*+]|\d+\.)\s+/, "")) + "</li>");
+      out.push((ordered ? "<ol>" : "<ul>") + items.join("") + (ordered ? "</ol>" : "</ul>")); continue;
+    }
+    if (/^>\s?/.test(line)) {
+      const buf = [];
+      while (i < lines.length && /^>\s?/.test(lines[i])) buf.push(lines[i++].replace(/^>\s?/, ""));
+      out.push("<blockquote><p>" + inlineMd(buf.join(" ")) + "</p></blockquote>"); continue;
+    }
+    if (/^\s*(---+|\*\*\*+)\s*$/.test(line)) { out.push("<hr>"); i++; continue; }
+    if (line.trim() === "") { i++; continue; }
+    const buf = [];
+    while (i < lines.length && lines[i].trim() !== "" &&
+           !/^(#{1,6}\s|```|>\s?|\s*([-*+]|\d+\.)\s)/.test(lines[i])) buf.push(lines[i++]);
+    out.push("<p>" + inlineMd(buf.join(" ")) + "</p>");
+  }
+  return out.join("\n");
+}
+
+/* ---------- render ---------- */
+document.getElementById("title").textContent = PLAN_TITLE;
+document.title = (MODE === "questions" ? "Questions: " : "Plan Review: ") + PLAN_TITLE;
+document.body.classList.add("mode-" + MODE);
+document.getElementById("hint").textContent = MODE === "questions"
+  ? "answer each question, then submit"
+  : "click a block or select text to comment";
+
+/* ---------- theme toggle (both modes) ---------- */
+const THEME_KEY = "plan-studio-theme";
+const themeBtn = document.getElementById("theme-toggle");
+function syncThemeIcon() {
+  const dark = document.documentElement.dataset.theme === "dark";
+  themeBtn.textContent = dark ? "☀︎" : "🌙";
+  themeBtn.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+  themeBtn.title = themeBtn.getAttribute("aria-label");
+}
+syncThemeIcon();
+themeBtn.onclick = () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  syncThemeIcon();
+};
+
+const renderMd = md => (window.marked && marked.parse) ? marked.parse(md) : miniMarkdown(md);
+
+/* ---------- shared: waiting overlay + next-round polling (both modes) ---------- */
+const overlay = document.getElementById("overlay");
+function showOverlay(title, msg, spin) {
+  document.getElementById("overlay-title").textContent = title;
+  document.getElementById("overlay-msg").textContent = msg;
+  document.getElementById("overlay-spinner").style.display = spin ? "block" : "none";
+  overlay.style.display = "flex";
+}
+function pollForNextRound() {
+  const t = setInterval(async () => {
+    try {
+      const r = await fetch("/status", { cache: "no-store" });
+      if (!r.ok) return;
+      const s = await r.json();
+      if (s.app === "plan-studio" && s.boot_id !== BOOT_ID) { clearInterval(t); location.reload(); }
+    } catch (e) { /* server between rounds; keep polling */ }
+  }, 1500);
+}
+
+if (MODE === "questions") {
+  /* ---------- questions mode ---------- */
+  const qlist = document.getElementById("questions-list");
+  const answers = QUESTIONS.map(() => ({ selected: [], other: "" }));
+  function updateSubmit() {
+    const allAnswered = QUESTIONS.every((q, i) =>
+      answers[i].selected.length > 0 || answers[i].other.trim());
+    document.getElementById("btn-submit-answers").disabled = !allAnswered;
+  }
+  QUESTIONS.forEach((q, qi) => {
+    const card = document.createElement("div"); card.className = "qcard";
+    const h3 = document.createElement("h3");
+    h3.textContent = q.header ? `${q.header}: ${q.question}` : q.question;
+    card.appendChild(h3);
+    if (q.multiSelect) {
+      const hint = document.createElement("div"); hint.className = "qmulti-hint";
+      hint.textContent = "Select all that apply.";
+      card.appendChild(hint);
+    }
+    (q.options || []).forEach(opt => {
+      const row = document.createElement("label"); row.className = "qopt";
+      const input = document.createElement("input");
+      input.type = q.multiSelect ? "checkbox" : "radio";
+      input.name = `q${qi}`;
+      input.dataset.label = opt.label;
+      input.onchange = () => {
+        answers[qi].selected = q.multiSelect
+          ? Array.from(qlist.querySelectorAll(`input[name="q${qi}"]:checked`))
+              .map(el => el.dataset.label)
+          : [opt.label];
+        updateSubmit();
+      };
+      const txt = document.createElement("div");
+      const lab = document.createElement("div"); lab.className = "qopt-label";
+      lab.textContent = opt.label; txt.appendChild(lab);
+      if (opt.description) {
+        const desc = document.createElement("div"); desc.className = "qopt-desc";
+        desc.textContent = opt.description; txt.appendChild(desc);
+      }
+      row.append(input, txt);
+      card.appendChild(row);
+    });
+    const other = document.createElement("div"); other.className = "qother";
+    const otherInput = document.createElement("input"); otherInput.type = "text";
+    otherInput.placeholder = "Other (type your own answer)…";
+    otherInput.oninput = () => { answers[qi].other = otherInput.value; updateSubmit(); };
+    other.appendChild(otherInput);
+    card.appendChild(other);
+    qlist.appendChild(card);
+  });
+  document.getElementById("btn-submit-answers").onclick = async () => {
+    const btn = document.getElementById("btn-submit-answers");
+    btn.disabled = true;
+    const out = QUESTIONS.map((q, i) => ({
+      question: q.question, header: q.header || null,
+      selected: answers[i].selected,
+      other: answers[i].other.trim() || null,
+    }));
+    try {
+      await fetch("/answers", { method: "POST", body: JSON.stringify({ answers: out }) });
+      showOverlay("Answers submitted",
+        "Claude is drafting the plan. This tab will reload when it's ready.", true);
+      pollForNextRound();
+    } catch (e) {
+      btn.disabled = false;
+      alert("Failed to submit. Is the server still running?");
+    }
+  };
+  updateSubmit();
+} else {
+/* ---------- plan review mode ---------- */
+const planEl = document.getElementById("plan");
+planEl.innerHTML = renderMd(PLAN_MD);
+
+/* what-changed banner (revision rounds only; not commentable (lives outside #plan)) */
+if (SUMMARY_MD) {
+  const banner = document.createElement("div");
+  banner.id = "summary-banner";
+  banner.innerHTML = '<div class="sb-head"><span class="chev">▼</span>' +
+    'What changed in round __ROUND__</div><div class="sb-body"></div>';
+  banner.querySelector(".sb-body").innerHTML = renderMd(SUMMARY_MD);
+  banner.querySelector(".sb-head").onclick = () => banner.classList.toggle("collapsed");
+  document.getElementById("summary-slot").appendChild(banner);
+}
+
+/* ---------- instrument blocks ---------- */
+function ownText(el) {
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll("ul, ol, .cbadge").forEach(n => n.remove());
+  return clone.textContent.replace(/\s+/g, " ").trim();
+}
+function capQuote(s) { return s.length > 500 ? s.slice(0, 500) + "…" : s; }
+
+const blockTypeOf = el => ({ P: "paragraph", LI: "list_item", PRE: "code",
+  BLOCKQUOTE: "blockquote", TABLE: "table" }[el.tagName] ||
+  (/^H[1-6]$/.test(el.tagName) ? "heading" : "block"));
+
+const allEls = planEl.querySelectorAll("p, h1, h2, h3, h4, h5, h6, li, pre, blockquote, table");
+const headingStack = [];
+allEls.forEach(el => {
+  if (/^H[1-6]$/.test(el.tagName)) {
+    const lvl = +el.tagName[1];
+    while (headingStack.length && headingStack[headingStack.length - 1].lvl >= lvl) headingStack.pop();
+    headingStack.push({ lvl, text: "#".repeat(lvl) + " " + el.textContent.trim() });
+  }
+  if (el.tagName === "P" && el.closest("li")) return;          // comment on the li instead
+  if (el.tagName === "LI" && !ownText(el)) return;             // li that only wraps a sub-list
+  if (el.closest("blockquote") !== null && el.tagName !== "BLOCKQUOTE") return;
+  el.classList.add("cblock");
+  el.dataset.heading = headingStack.map(h => h.text).join(" > ");
+});
+
+/* ---------- comments model ---------- */
+const comments = [];   // {n, type, block_type, heading_context, quote, prefix, suffix, comment, el, badge}
+const listEl = document.getElementById("comment-list");
+const btnSend = document.getElementById("btn-send");
+const generalEl = document.getElementById("general");
+
+function refresh() {
+  comments.forEach((c, i) => { c.n = i + 1; if (c.badge) c.badge.textContent = c.n; });
+  listEl.querySelectorAll(".cmt-card").forEach(n => n.remove());
+  document.getElementById("empty-note").style.display = comments.length ? "none" : "block";
+  comments.forEach(c => {
+    const card = document.createElement("div"); card.className = "cmt-card";
+    const meta = document.createElement("div"); meta.className = "meta";
+    const num = document.createElement("span"); num.className = "cmt-num"; num.textContent = c.n;
+    const hd = document.createElement("span"); hd.className = "cmt-heading";
+    hd.textContent = c.heading_context || "(top of plan)";
+    const del = document.createElement("button"); del.className = "cmt-del";
+    del.textContent = "✕"; del.title = "Delete comment";
+    del.onclick = () => {
+      if (c.badge) c.badge.remove();
+      if (c.el && !comments.some(o => o !== c && o.el === c.el)) c.el.classList.remove("has-comment");
+      comments.splice(comments.indexOf(c), 1); refresh();
+    };
+    meta.append(num, hd, del);
+    const q = document.createElement("div"); q.className = "cmt-quote";
+    q.textContent = "“" + c.quote + "”";
+    const ta = document.createElement("textarea"); ta.rows = 2; ta.value = c.comment;
+    ta.oninput = () => { c.comment = ta.value; updateSend(); };
+    card.append(meta, q, ta);
+    card.onmouseenter = () => c.el && c.el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    listEl.appendChild(card);
+  });
+  updateSend();
+}
+function commentCount() {
+  return comments.filter(c => c.comment.trim()).length + (generalEl.value.trim() ? 1 : 0);
+}
+function updateSend() {
+  const n = commentCount();
+  const any = n > 0;
+  btnSend.disabled = !any;
+  btnSend.textContent = n ? `Send comments (${n})` : "Send comments";
+  const approve = document.getElementById("btn-approve");
+  approve.disabled = !!any;
+  approve.title = any ? "Send (or delete) your comments first; approval means no outstanding feedback"
+                      : "Approve the plan as-is";
+}
+generalEl.addEventListener("input", updateSend);
+
+/* ---------- popover ---------- */
+const popover = document.getElementById("popover");
+const popTa = popover.querySelector("textarea");
+const popQuote = popover.querySelector(".quote-preview");
+let pending = null;   // draft comment awaiting Save
+
+function showPopover(x, y, draft) {
+  pending = draft;
+  popQuote.textContent = "“" + draft.quote + "”";
+  popTa.value = "";
+  popover.style.display = "block";
+  const pw = popover.offsetWidth;
+  popover.style.left = Math.max(8, Math.min(x, window.innerWidth - pw - 16)) + window.scrollX + "px";
+  popover.style.top = (y + window.scrollY + 8) + "px";
+  popTa.focus();
+}
+function hidePopover() { popover.style.display = "none"; pending = null; }
+document.getElementById("pop-cancel").onclick = hidePopover;
+document.getElementById("pop-save").onclick = () => {
+  if (!pending || !popTa.value.trim()) { hidePopover(); return; }
+  pending.comment = popTa.value.trim();
+  if (pending.el) {
+    pending.el.classList.add("has-comment");
+    const b = document.createElement("span"); b.className = "cbadge";
+    pending.el.appendChild(b); pending.badge = b;
+  }
+  if (pending.range) {
+    try {
+      const mark = document.createElement("mark"); mark.className = "sel-hl";
+      pending.range.surroundContents(mark);
+    } catch (e) { /* range crosses element boundaries; badge on block is enough */ }
+    delete pending.range;
+  }
+  comments.push(pending); hidePopover(); refresh();
+};
+popTa.addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) document.getElementById("pop-save").click();
+  if (e.key === "Escape") hidePopover();
+});
+
+/* ---------- block click ---------- */
+planEl.addEventListener("click", e => {
+  if (window.getSelection().toString()) return;   // selecting, not clicking
+  const block = e.target.closest(".cblock");
+  if (!block || popover.contains(e.target)) return;
+  const r = block.getBoundingClientRect();
+  showPopover(e.clientX - 160, r.bottom, {
+    type: "block", block_type: blockTypeOf(block),
+    heading_context: block.dataset.heading || "",
+    quote: capQuote(ownText(block)), prefix: null, suffix: null, comment: "", el: block,
+  });
+});
+
+/* ---------- text selection ---------- */
+const selBtn = document.getElementById("sel-btn");
+let selDraft = null;
+document.addEventListener("mouseup", e => {
+  if (popover.contains(e.target) || e.target === selBtn) return;
+  setTimeout(() => {
+    const sel = window.getSelection();
+    const text = sel.toString().replace(/\s+/g, " ").trim();
+    if (!text || sel.isCollapsed || !planEl.contains(sel.anchorNode)) {
+      selBtn.style.display = "none"; return;
+    }
+    const range = sel.getRangeAt(0);
+    const block = (range.startContainer.nodeType === 1 ? range.startContainer
+                   : range.startContainer.parentElement).closest(".cblock");
+    let prefix = null, suffix = null;
+    if (block) {
+      const bt = ownText(block);
+      const idx = bt.indexOf(text.slice(0, 60));
+      if (idx >= 0) {
+        prefix = bt.slice(Math.max(0, idx - 30), idx) || null;
+        suffix = bt.slice(idx + text.length, idx + text.length + 30) || null;
+      }
+    }
+    selDraft = {
+      type: "selection", block_type: block ? blockTypeOf(block) : "unknown",
+      heading_context: block ? block.dataset.heading || "" : "",
+      quote: capQuote(text), prefix, suffix, comment: "",
+      el: block, range: range.cloneRange(),
+    };
+    const rect = range.getBoundingClientRect();
+    selBtn.style.display = "block";
+    selBtn.style.left = (rect.right + window.scrollX - 40) + "px";
+    selBtn.style.top = (rect.bottom + window.scrollY + 6) + "px";
+  }, 0);
+});
+selBtn.onclick = e => {
+  selBtn.style.display = "none";
+  if (selDraft) showPopover(e.clientX - 160, e.clientY, selDraft);
+  selDraft = null;
+};
+
+/* ---------- submit / approve / waiting ---------- */
+function payload() {
+  return JSON.stringify({
+    general_comments: generalEl.value.trim() || null,
+    comments: comments.filter(c => c.comment.trim()).map(c => ({
+      n: c.n, type: c.type, block_type: c.block_type,
+      heading_context: c.heading_context || null,
+      quote: c.quote, prefix: c.prefix, suffix: c.suffix, comment: c.comment.trim(),
+    })),
+  });
+}
+btnSend.onclick = async () => {
+  btnSend.disabled = true;
+  try {
+    await fetch("/comments", { method: "POST", body: payload() });
+    const n = commentCount();
+    showOverlay(`Sent ${n} comment${n === 1 ? "" : "s"}. Claude is revising the plan…`,
+                "This page will reload automatically when the next round is ready.", true);
+    pollForNextRound();
+  } catch (e) { btnSend.disabled = false; alert("Failed to send. Is the server still running?"); }
+};
+document.getElementById("btn-approve").onclick = async () => {
+  try {
+    await fetch("/approve", { method: "POST", body: payload() });
+    showOverlay("✅ Plan approved", "You can close this tab. Claude is proceeding with the plan.", false);
+  } catch (e) { alert("Failed to approve. Is the server still running?"); }
+};
+updateSend();
+}
+
+/* ---------- heartbeat (both modes) ---------- */
+setInterval(() => fetch("/heartbeat", { method: "POST" }).catch(() => {}), 5000);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) fetch("/heartbeat", { method: "POST" }).catch(() => {});
+});
+</script>
+</body>
+</html>

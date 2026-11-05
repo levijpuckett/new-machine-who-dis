@@ -30,6 +30,18 @@ link ideavimrc    ~/.ideavimrc
 link bash_aliases ~/.bash_aliases
 link tmux.conf    ~/.tmux.conf
 
+echo "==> Agent instructions and skills"
+link AGENTS.md ~/AGENTS.md
+
+# Claude Code reads CLAUDE.md, not AGENTS.md.
+link AGENTS.md ~/.claude/CLAUDE.md
+
+# Skills are linked one by one so other skills in the agent's dir stay local.
+for skill in "$DOTFILES"/skills/*/; do
+  name="$(basename "$skill")"
+  link "skills/$name" ~/.claude/skills/"$name"
+done
+
 # Untracked, per-machine git settings (name, email...), included by gitconfig
 if [ ! -e ~/.gitconfig.local ]; then
   printf '[user]\n    name =\n    email =\n' > ~/.gitconfig.local
